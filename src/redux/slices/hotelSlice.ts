@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Hotel } from '../../types/Hotel';
+import { haversineDistance, validateGallery, cityCenters } from '../../utils/hotelUtils';
 
 export enum Status {
   Idle = 'idle',
@@ -33,15 +34,37 @@ export const fetchHotels = createAsyncThunk<
   async (_, { rejectWithValue }) => {
     try {
       const response = await fetch(HOTELS_API_URL);
-      console.log('response', response)
       if (!response.ok) {
-        // Return a custom error message when response is not OK
+         // Return a custom error message when response is not OK
         return rejectWithValue('Failed to load hotels (invalid response).');
       }
-      const data = await response.json();
-      return data as Hotel[];
+      
+      const rawHotels = (await response.json()) as Hotel[];
+
+      const enhancedHotels: Hotel[] = await Promise.all(
+        rawHotels.map(async (hotel) => {
+          const center = cityCenters[hotel.location.city];
+          const distance = center
+            ? haversineDistance(
+                hotel.location.latitude,
+                hotel.location.longitude,
+                center.latitude,
+                center.longitude
+              )
+            : 0;
+
+          const cleanedGallery = await validateGallery(hotel.gallery);
+
+          return {
+            ...hotel,
+            distanceToCenter: Math.round(distance * 10) / 10,
+            gallery: cleanedGallery,
+          };
+        })
+      );
+
+      return enhancedHotels;
     } catch (error) {
-      // Return a custom error message on network failure
       return rejectWithValue('Network error while fetching hotels.');
     }
   }

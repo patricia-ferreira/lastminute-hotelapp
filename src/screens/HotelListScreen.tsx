@@ -1,55 +1,102 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
   TextInput,
+  TouchableOpacity,
+  FlatList,
   ActivityIndicator,
-  ListRenderItem,
   SafeAreaView,
+  StyleSheet,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation, useTheme } from '@react-navigation/native';
-import { fetchHotels, Status } from '../redux/slices/hotelSlice';
-import { RootState, AppDispatch } from '../redux/store';
-import { HotelCard } from '../components/HotelCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Hotel } from '../types/Hotel';
-import { RootStackParamList } from '../navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { fetchHotels, Status } from '../redux/slices/hotelSlice';
+import HotelFiltersModal from '../components/HotelFilterModal';
 
-type HotelListScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'HotelListScreen'
->;
+import { HotelCard } from '../components/HotelCard';
+import { RootState, AppDispatch } from '../redux/store';
+import { Hotel, HotelFilters, SortOption } from '../types/Hotel';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation';
+import SortModal from '../components/SortModal';
+
+type NavProp = NativeStackNavigationProp<RootStackParamList, 'HotelListScreen'>;
 
 export default function HotelListScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<NavProp>();
   const { colors } = useTheme();
-  const { list, status, error } = useSelector(
-    (state: RootState) => state.hotels,
-  );
-  const [searchQuery, setSearchQuery] = useState('');
+  const { list, status, error } = useSelector((s: RootState) => s.hotels);
 
-  const filteredList = list.filter(hotel => {
-    const q = searchQuery.toLowerCase();
-    return (
-      hotel.name.toLowerCase().includes(q) ||
-      hotel.location.city.toLowerCase().includes(q)
-    );
+  const [filters, setFilters] = useState<HotelFilters>({
+    query: '',
+    minPrice: null,
+    maxPrice: null,
+    stars: [],
+    userRatings: [],
+    maxDistance: null,
+    sortBy: 'priceAsc',
   });
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+
+  const filtered = useMemo(() => {
+    const arr = list.filter(h => {
+      const q = filters.query.toLowerCase();
+      if (
+        q &&
+        !h.name.toLowerCase().includes(q) &&
+        !h.location.city.toLowerCase().includes(q)
+      )
+        return false;
+      if (filters.minPrice != null && h.price < filters.minPrice) return false;
+      if (filters.maxPrice != null && h.price > filters.maxPrice) return false;
+      if (filters.stars.length && !filters.stars.includes(h.stars))
+        return false;
+      if (
+        filters.userRatings.length &&
+        !filters.userRatings.some(r => h.userRating >= r)
+      )
+        return false;
+      if (
+        filters.maxDistance != null &&
+        h.distanceToCenter > filters.maxDistance
+      )
+        return false;
+      return true;
+    });
+    return arr.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'priceAsc':
+          return a.price - b.price;
+        case 'priceDesc':
+          return b.price - a.price;
+        case 'ratingAsc':
+          return a.userRating - b.userRating;
+        case 'ratingDesc':
+          return b.userRating - a.userRating;
+        case 'starsAsc':
+          return a.stars - b.stars;
+        case 'starsDesc':
+          return b.stars - a.stars;
+        case 'distanceAsc':
+          return a.distanceToCenter - b.distanceToCenter;
+        case 'distanceDesc':
+          return b.distanceToCenter - a.distanceToCenter;
+        default:
+          return 0;
+      }
+    });
+  }, [list, filters]);
 
   useEffect(() => {
-    if (status === Status.Idle) {
-      dispatch(fetchHotels());
-    }
+    if (status === Status.Idle) dispatch(fetchHotels());
   }, [status, dispatch]);
 
-  const navigation = useNavigation<HotelListScreenNavigationProp>();
-
-  const renderItem: ListRenderItem<Hotel> = useCallback(
-    ({ item }) => (
+  const render = useCallback(
+    ({ item }: { item: Hotel }) => (
       <HotelCard
         hotel={item}
         onPress={() =>
@@ -61,109 +108,96 @@ export default function HotelListScreen() {
   );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <Text style={[styles.headerText, { color: colors.text }]}>
-        Let's start your journey!
-      </Text>
-
-      <View
-        style={[
-          styles.searchWrapper,
-          { backgroundColor: colors.card, shadowColor: colors.text },
-        ]}
-      >
-        <Ionicons name="location-outline" size={20} color={colors.text} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={styles.topBar}>
         <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
-          placeholder="Search hotels..."
+          style={[
+            styles.input,
+            { borderBottomColor: colors.border, color: colors.text },
+          ]}
+          placeholder="Search hotels or cities..."
           placeholderTextColor={colors.text + '99'}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+          value={filters.query}
+          onChangeText={t => setFilters(prev => ({ ...prev, query: t }))}
         />
+        <TouchableOpacity
+          onPress={() => setFilterModalVisible(true)}
+          style={styles.icon}
+        >
+          <Ionicons name="options-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSortModalVisible(true)}
+          style={styles.icon}
+        >
+          <Ionicons
+            name="swap-vertical-outline"
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
       </View>
 
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        Popular Hotels
-      </Text>
-
-      {status === Status.Loading ? (
+      {status === Status.Loading && (
         <ActivityIndicator
+          style={{ flex: 1 }}
           size="large"
           color={colors.primary}
-          style={{ marginTop: 20 }}
-        />
-      ) : status === Status.Failed ? (
-        <Text style={{ color: colors.text }}>Error: {error}</Text>
-      ) : (
-        <FlatList
-          data={filteredList}
-          extraData={searchQuery}
-          keyExtractor={item => item.id.toString()}
-          renderItem={renderItem}
-          ListEmptyComponent={() => (
-            <View style={styles.center}>
-              <Text style={{ color: colors.text }}>No hotels found</Text>
-            </View>
-          )}
-          contentContainerStyle={{ paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
         />
       )}
+      {status === Status.Failed && (
+        <Text style={styles.error}>Error: {error}</Text>
+      )}
+      {status === Status.Succeeded && !filtered.length && (
+        <Text style={styles.error}>No hotels found</Text>
+      )}
+      {status === Status.Succeeded && !!filtered.length && (
+        <FlatList
+          data={filtered}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={h => h.id.toString()}
+          renderItem={render}
+          contentContainerStyle={{ padding: 16 }}
+        />
+      )}
+
+      <HotelFiltersModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        prices={list.map(h => h.price)}
+        filters={filters}
+        setFilters={setFilters}
+      />
+      <SortModal
+        visible={sortModalVisible}
+        selected={filters.sortBy}
+        onSelect={(s: SortOption) => {
+          setFilters(f => ({ ...f, sortBy: s }));
+          setSortModalVisible(false);
+        }}
+        onClose={() => setSortModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 16,
-  },
-  headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  searchWrapper: {
+  topBar: {
     flexDirection: 'row',
+    padding: 16,
     alignItems: 'center',
-    marginHorizontal: 16,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    elevation: 2,
-    marginBottom: 8,
   },
-  searchInput: {
-    marginLeft: 8,
+  input: {
     flex: 1,
+    borderBottomWidth: 1,
     fontSize: 16,
   },
-  searchButton: {
-    marginHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    elevation: 4,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    marginBottom: 12,
+  icon: {
+    marginLeft: 12,
   },
-  searchButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  center: {
-    alignItems: 'center',
-    marginTop: 32,
+  error: {
+    textAlign: 'center',
+    margin: 16,
+    color: '#888',
   },
 });
