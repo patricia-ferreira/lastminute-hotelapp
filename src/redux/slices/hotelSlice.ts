@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Hotel } from '../../types/Hotel';
-import { haversineDistance, validateGallery } from '../../utils/hotelUtils';
+import { haversineDistance } from '../../utils/hotelUtils';
 import { cities } from '../../mocks/cities';
 import Config from 'react-native-config';
 
@@ -58,12 +58,9 @@ export const fetchHotels = createAsyncThunk<
             )
             : 0;
 
-          const cleanedGallery = await validateGallery(hotel.gallery);
-
           return {
             ...hotel,
             distanceToCenter: Math.round(distance * 10) / 10,
-            gallery: cleanedGallery,
           };
         })
       );

@@ -22,6 +22,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import SafeImage from '../components/SafeImage';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
@@ -67,15 +68,15 @@ export default function HomeScreen() {
           borderBottomRightRadius: wp('6%'),
         }}
       >
-        <Text style={[styles.locationText, { color: colors.card }]}>
+        <Text style={[styles.locationText, { color: 'white' }]}>
           📍 Your Location
         </Text>
-        <Text style={[styles.bannerTitle, { color: colors.card }]}>
+        <Text style={[styles.bannerTitle, { color: 'white' }]}>
           Find the perfect hotel
         </Text>
 
         <TextInput
-          placeholder="Search hotel or city..."
+          placeholder="Search hotel..."
           placeholderTextColor={colors.text + '88'}
           style={[
             styles.searchInput,
@@ -119,46 +120,56 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingHorizontal: wp('4%') }}
         />
       ) : (
-        <Text
-          style={{
-            color: colors.text,
-            paddingHorizontal: wp('4%'),
-            fontSize: hp('1.8%'),
-          }}
-        >
-          No hotels found.
-        </Text>
+        <View style={{ padding: wp('6%'), alignItems: 'center' }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: hp('2%'),
+              textAlign: 'center',
+            }}
+          >
+            No hotels found
+          </Text>
+        </View>
       )}
 
       {/* Cities section */}
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Explore by City
-        </Text>
-      </View>
-      <FlatList
-        data={cities}
-        horizontal
-        keyExtractor={item => item.name}
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.cityCard}
-            onPress={() =>
-              navigation.navigate('CityScreen', { cityName: item.name })
-            }
-          >
-            <Image source={{ uri: item.image }} style={styles.cityImage} />
-            <Text style={[styles.cityName, { color: colors.text }]}>
-              {item.name}
+      {query.length === 0 && (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Explore by City
             </Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={{
-          paddingHorizontal: wp('4%'),
-          paddingBottom: hp('3%'),
-        }}
-      />
+          </View>
+          <FlatList
+            data={cities}
+            horizontal
+            keyExtractor={item => item.name}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.cityCard}
+                onPress={() =>
+                  navigation.navigate('CityScreen', { cityName: item.name })
+                }
+              >
+                <SafeImage
+                  source={item.image}
+                  style={styles.cityImage}
+                  resizeMode="cover"
+                />
+                <Text style={[styles.cityName, { color: colors.text }]}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={{
+              paddingHorizontal: wp('4%'),
+              paddingBottom: hp('3%'),
+            }}
+          />
+        </>
+      )}
     </SafeAreaView>
   );
 }

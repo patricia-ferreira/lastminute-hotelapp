@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Hotel } from '../types/Hotel';
 import { useTheme } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -8,6 +8,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import SafeImage from './SafeImage';
 
 interface Props {
   hotel: Hotel;
@@ -42,26 +43,7 @@ export function HotelCard({ hotel, onPress }: Props) {
       onPress={onPress}
       activeOpacity={0.8}
     >
-      {hotel.gallery && hotel.gallery.length > 0 ? (
-        <Image
-          source={{ uri: hotel.gallery[0] }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      ) : (
-        <View
-          style={[
-            styles.image,
-            {
-              backgroundColor: '#ccc',
-              justifyContent: 'center',
-              alignItems: 'center',
-            },
-          ]}
-        >
-          <Ionicons name="business-outline" size={hp('5%')} color="#999" />
-        </View>
-      )}
+      <SafeImage source={hotel.gallery[0]} style={styles.image} />
 
       <View style={styles.content}>
         <Text
@@ -120,7 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('4%'),
     overflow: 'hidden',
     borderWidth: 1,
-    marginBottom: hp('2%'),
+    marginBottom: hp('2.5%'),
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.1,

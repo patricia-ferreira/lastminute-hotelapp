@@ -5,10 +5,10 @@ export const LightTheme = {
     dark: false,
     colors: {
         primary: '#FF477E',
-        background: '#FFFFFF',
-        card: '#FAFAFA',
-        text: '#1E2A38',
-        border: '#CCCCCC',
+        background: '#EAEAEA',
+        card: '#FFFFFF',
+        text: '#2C2C2C',
+        border: '#E0E0E0',
         notification: '#FFA726',
     }
 };

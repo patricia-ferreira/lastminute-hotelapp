@@ -16,19 +16,19 @@ export const cities: City[] = [
       {
         id: 2,
         name: 'Fresh Baguette',
-        image: 'https://images.unsplash.com/photo-1622808516114-02a5749cd965?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1599819055803-717bba43890f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 3,
         name: 'Crepes',
-        image: 'https://images.unsplash.com/photo-1649873034148-7f06e5dafbd1?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1515467837915-15c4777ba46a?q=80&w=2074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
     ],
     activities: [
       {
         id: 1,
         name: 'Eiffel Tower Visit',
-        image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
+        image: 'https://images.unsplash.com/photo-1609087361918-cc99d6f604ac?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 2,
@@ -38,7 +38,7 @@ export const cities: City[] = [
       {
         id: 3,
         name: 'Seine River Cruise',
-        image: 'https://images.unsplash.com/photo-1692976540874-d5515daaaf5d?q=80&w=1035&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1567187155374-cd9135b1f247?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
     ],
   },
@@ -62,7 +62,7 @@ export const cities: City[] = [
       {
         id: 3,
         name: 'Afternoon Tea',
-        image: 'https://images.unsplash.com/photo-1646750669913-022eead22ea5?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1497800640957-3100979af57c?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
     ],
     activities: [
@@ -74,7 +74,7 @@ export const cities: City[] = [
       {
         id: 2,
         name: 'London Eye Ride',
-        image: 'https://images.unsplash.com/photo-1661602687087-3bf1355046cf?q=80&w=1064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1510270165035-113679af1ac9?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 3,
@@ -98,7 +98,7 @@ export const cities: City[] = [
       {
         id: 2,
         name: 'Ramen',
-        image: 'https://images.unsplash.com/photo-1526318896980-cf78c088247c?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1720873915320-84103511b1fb?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 3,
@@ -144,7 +144,7 @@ export const cities: City[] = [
       {
         id: 3,
         name: 'Street Hot Dog',
-        image: 'https://images.unsplash.com/photo-1638368593117-f87fb4ebeb74?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        image: 'https://images.unsplash.com/photo-1577008507686-7418c4e06774?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
     ],
     activities: [

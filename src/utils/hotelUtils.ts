@@ -13,17 +13,3 @@ export function haversineDistance(
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
-
-export async function validateGallery(gallery: string[]): Promise<string[]> {
-  const results = await Promise.all(
-    gallery.map(async (url) => {
-      try {
-        const res = await fetch(url, { method: 'HEAD' });
-        return res.ok ? url : null;
-      } catch {
-        return null;
-      }
-    })
-  );
-  return results.filter(Boolean) as string[];
-}

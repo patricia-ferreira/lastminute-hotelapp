@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   Linking,
   TouchableOpacity,
   Pressable,
+  FlatList,
+  Dimensions,
+  ViewToken,
 } from 'react-native';
 import {
   RouteProp,
@@ -16,12 +19,14 @@ import {
 } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { formatPrice } from '../utils/formatPrice';
-import { HotelImageGallery } from '../components/HotelImageGallery';
 import { Hotel } from '../types/Hotel';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import SafeImage from '../components/SafeImage';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type RouteParams = {
   hotel: Hotel;
@@ -32,6 +37,18 @@ export default function HotelDetailsScreen() {
   const { hotel } = params;
   const { colors } = useTheme();
   const navigation = useNavigation();
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const onViewRef = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0) {
+        setActiveIndex(viewableItems[0].index ?? 0);
+      }
+    },
+  );
+  const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
 
   const renderStars = () =>
     [...Array(5)].map((_, i) => (
@@ -58,41 +75,51 @@ export default function HotelDetailsScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.card }}>
       <View style={styles.imageContainer}>
-        <HotelImageGallery gallery={hotel.gallery} />
+        <FlatList
+          data={hotel.gallery}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(_, i) => i.toString()}
+          onViewableItemsChanged={onViewRef.current}
+          viewabilityConfig={viewConfigRef.current}
+          renderItem={({ item }) => (
+            <SafeImage source={item} style={styles.image} />
+          )}
+        />
         <Pressable
           onPress={() => navigation.goBack()}
-          style={[
-            styles.backButton,
-            { backgroundColor: '#00000080' }, 
-          ]}
+          style={[styles.backButton, { backgroundColor: '#00000080' }]}
         >
           <Ionicons name="arrow-back" size={hp('3%')} color="#fff" />
         </Pressable>
+        <View style={styles.dotsContainer}>
+          {hotel.gallery.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === activeIndex && { backgroundColor: colors.primary },
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
       <ScrollView
         style={styles.scrollArea}
-        contentContainerStyle={{ paddingTop: hp('6%') }}
+        contentContainerStyle={{
+          paddingTop: hp('6%'),
+          paddingBottom: hp('10%'),
+        }}
         showsVerticalScrollIndicator={false}
-        bounces={false}
       >
         <View style={[styles.cardContainer, { backgroundColor: colors.card }]}>
-          <Text style={[styles.title, { color: colors.text }]}>{hotel.name}</Text>
-
-          <View style={styles.addressRow}>
-            <Text style={[styles.addressText, { color: colors.text }]}>
-              {hotel.location.address}, {hotel.location.city}
-            </Text>
-            <TouchableOpacity onPress={openMap}>
-              <Ionicons
-                name="navigate-circle-outline"
-                size={hp('2.4%')}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-          </View>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {hotel.name}
+          </Text>
 
           <View style={styles.ratingRow}>
             <View style={styles.stars}>{renderStars()}</View>
@@ -101,44 +128,106 @@ export default function HotelDetailsScreen() {
             </Text>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Description
-          </Text>
-          <Text style={[styles.text, { color: colors.text }]}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla
-            tincidunt nisl vitae semper aliquam.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Facilities
-          </Text>
-          <View style={styles.facilitiesRow}>
-            {[
-              { icon: 'wifi-outline', label: 'Wi-Fi' },
-              { icon: 'car-outline', label: 'Parking' },
-              { icon: 'restaurant-outline', label: 'Restaurant' },
-              { icon: 'fitness-outline', label: 'Gym' },
-            ].map(({ icon, label }, idx) => (
-              <View key={idx} style={styles.facilityItem}>
-                <Ionicons name={icon} size={hp('3%')} color={colors.primary} />
-                <Text style={[styles.facilityText, { color: colors.text }]}>
-                  {label}
-                </Text>
-              </View>
-            ))}
+          <View style={styles.addressRow}>
+            <TouchableOpacity onPress={openMap} style={styles.mapIconWrapper}>
+              <Ionicons
+                name="navigate-circle-outline"
+                size={hp('2.4%')}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            <Text style={[styles.addressText, { color: colors.text }]}>
+              {hotel.location.address}, {hotel.location.city}
+            </Text>
           </View>
 
+          <View style={{ marginTop: hp('2%') }}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Facilities
+            </Text>
+            <View style={styles.facilitiesRow}>
+              {[
+                { icon: 'wifi-outline', label: 'Wi-Fi' },
+                { icon: 'car-outline', label: 'Parking' },
+                { icon: 'restaurant-outline', label: 'Restaurant' },
+                { icon: 'fitness-outline', label: 'Gym' },
+              ].map(({ icon, label }, idx) => (
+                <View key={idx} style={styles.facilityItem}>
+                  <Ionicons
+                    name={icon}
+                    size={hp('3%')}
+                    color={colors.primary}
+                  />
+                  <Text style={[styles.facilityText, { color: colors.text }]}>
+                    {label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.descContainer}>
+            <TouchableOpacity
+              onPress={() => setDescExpanded(!descExpanded)}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Description
+              </Text>
+              <Ionicons
+                name={
+                  descExpanded ? 'chevron-up-outline' : 'chevron-down-outline'
+                }
+                size={hp('3%')}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+
+            {descExpanded && (
+              <View style={{ marginTop: hp('1%') }}>
+                <Text style={[styles.text, { color: colors.text }]}>
+                  Discover a welcoming stay at our hotel, where comfort meets
+                  convenience. Enjoy modern amenities, friendly service, and a
+                  prime location perfect for business or leisure travelers. For
+                  any inquiries, feel free to contact us at{' '}
+                  {hotel.contact.email} or call us at{' '}
+                  {hotel.contact.phoneNumber}.
+                </Text>
+              </View>
+            )}
+          </View>
           <View style={styles.checkInOutContainer}>
-            <View style={[styles.checkCard, { backgroundColor: colors.border }]}>
-              <Ionicons name="calendar-outline" size={hp('3%')} color={colors.primary} />
-              <Text style={[styles.checkTitle, { color: colors.text }]}>Check-in</Text>
+            <View
+              style={[styles.checkCard, { backgroundColor: colors.border }]}
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={hp('3%')}
+                color={colors.primary}
+              />
+              <Text style={[styles.checkTitle, { color: colors.text }]}>
+                Check-in
+              </Text>
               <Text style={[styles.checkTime, { color: colors.text }]}>
                 {hotel.checkIn.from} - {hotel.checkIn.to}
               </Text>
             </View>
-            <View style={[styles.checkCard, { backgroundColor: colors.border }]}>
-              <Ionicons name="log-out-outline" size={hp('3%')} color={colors.primary} />
-              <Text style={[styles.checkTitle, { color: colors.text }]}>Check-out</Text>
+            <View
+              style={[styles.checkCard, { backgroundColor: colors.border }]}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={hp('3%')}
+                color={colors.primary}
+              />
+              <Text style={[styles.checkTitle, { color: colors.text }]}>
+                Check-out
+              </Text>
               <Text style={[styles.checkTime, { color: colors.text }]}>
                 {hotel.checkOut.from} - {hotel.checkOut.to}
               </Text>
@@ -166,7 +255,7 @@ export default function HotelDetailsScreen() {
 
 const styles = StyleSheet.create({
   imageContainer: {
-    height: hp('35%'),
+    height: hp('40%'),
     overflow: 'hidden',
     borderBottomLeftRadius: wp('8%'),
     borderBottomRightRadius: wp('8%'),
@@ -174,11 +263,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: hp('5%'),
+    top: hp('6%'),
     left: wp('4%'),
-    borderRadius: wp('6%'),
-    padding: hp('1%'),
     zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: wp('1%'),
+    borderRadius: wp('6%'),
   },
   scrollArea: {
     flex: 1,
@@ -189,12 +279,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: wp('8%'),
     paddingHorizontal: wp('5%'),
     paddingTop: hp('2%'),
-    backgroundColor: 'white', 
+    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3,
   },
   title: {
     fontSize: hp('3%'),
@@ -203,18 +292,19 @@ const styles = StyleSheet.create({
   },
   addressRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: hp('1.2%'),
+  },
+  mapIconWrapper: {
+    marginRight: wp('2%'),
   },
   addressText: {
     fontSize: hp('1.8%'),
-    flex: 1,
+    flexShrink: 1,
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: hp('2%'),
+    marginBottom: hp('1%'),
   },
   stars: {
     flexDirection: 'row',
@@ -226,17 +316,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: hp('2%'),
     fontWeight: 'bold',
-    marginTop: hp('2%'),
-    marginBottom: hp('0.8%'),
   },
   text: {
     fontSize: hp('1.7%'),
     lineHeight: hp('2.4%'),
   },
+  descContainer: {
+    marginTop: hp('2%'),
+  },
   facilitiesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: hp('1%'),
+    paddingHorizontal: wp('3%'),
   },
   facilityItem: {
     alignItems: 'center',
@@ -280,6 +372,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     borderTopLeftRadius: wp('8%'),
     borderTopRightRadius: wp('8%'),
+    paddingBottom: hp('5%'),
   },
   priceText: {
     fontSize: hp('2%'),
@@ -301,5 +394,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: hp('2%'),
+  },
+  image: {
+    width: SCREEN_WIDTH,
+    height: '100%',
+  },
+  dotsContainer: {
+    position: 'absolute',
+    bottom: 10,
+    width: SCREEN_WIDTH,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    marginHorizontal: 4,
+  },
+
+  container: {
+    width: SCREEN_WIDTH,
+    height: '100%',
+    position: 'relative',
   },
 });
