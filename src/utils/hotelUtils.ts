@@ -1,11 +1,3 @@
-export const cityCenters: Record<string, { latitude: number; longitude: number }> = {
-  London: { latitude: 51.5074, longitude: -0.1278 },
-  Paris: { latitude: 48.8566, longitude: 2.3522 },
-  Rome: { latitude: 41.9028, longitude: 12.4964 },
-  Madrid: { latitude: 40.4168, longitude: -3.7038 },
-  Berlin: { latitude: 52.52, longitude: 13.405 },
-};
-
 export function haversineDistance(
   lat1: number,
   lon1: number,

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Hotel } from '../types/Hotel';
 import { useTheme } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { formatPrice } from '../utils/formatPrice';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 
 interface Props {
   hotel: Hotel;
@@ -12,19 +16,6 @@ interface Props {
 
 export function HotelCard({ hotel, onPress }: Props) {
   const { colors } = useTheme();
-  const [imageIndex, setImageIndex] = useState(0);
-  const [imageFailed, setImageFailed] = useState(false);
-
-  const gallery = hotel.gallery || [];
-  const hasImages = gallery.length > 0;
-
-  const handleImageError = () => {
-    if (imageIndex + 1 < gallery.length) {
-      setImageIndex(i => i + 1);
-    } else {
-      setImageFailed(true);
-    }
-  };
 
   const renderStars = () =>
     [...Array(5)].map((_, i) => (
@@ -37,56 +28,84 @@ export function HotelCard({ hotel, onPress }: Props) {
             ? 'star-half'
             : 'star-outline'
         }
-        size={14}
+        size={hp('2%')}
         color="#FFD700"
       />
     ));
 
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.card }]}
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
       onPress={onPress}
+      activeOpacity={0.8}
     >
-      <View style={styles.imageContainer}>
-        {!hasImages || imageFailed ? (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="image-outline" size={48} color="#aaa" />
-          </View>
-        ) : (
-          <Image
-            source={{ uri: gallery[imageIndex] }}
-            style={styles.image}
-            resizeMode="cover"
-            onError={handleImageError}
-          />
-        )}
-      </View>
+      {hotel.gallery && hotel.gallery.length > 0 ? (
+        <Image
+          source={{ uri: hotel.gallery[0] }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={[
+            styles.image,
+            {
+              backgroundColor: '#ccc',
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+          ]}
+        >
+          <Ionicons name="business-outline" size={hp('5%')} color="#999" />
+        </View>
+      )}
 
       <View style={styles.content}>
-        <View style={styles.header}>
+        <Text
+          style={[styles.title, { color: colors.text }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          adjustsFontSizeToFit
+        >
+          {hotel.name}
+        </Text>
+
+        <View style={styles.ratingRow}>
+          <View style={styles.stars}>{renderStars()}</View>
           <Text
-            style={[styles.title, { color: colors.text }]}
+            style={[
+              styles.userRating,
+              { color: colors.text, marginLeft: wp('2%') },
+            ]}
+          >
+            | {hotel.userRating.toFixed(1)} (based on user reviews)
+          </Text>
+        </View>
+
+        <View style={styles.locationRow}>
+          <Ionicons
+            name="location-outline"
+            size={hp('2%')}
+            color={colors.text}
+          />
+          <Text
+            style={[styles.address, { color: colors.text }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {hotel.name}
-          </Text>
-          <View style={styles.stars}>{renderStars()}</View>
-        </View>
-
-        <View style={styles.addressRow}>
-          <Ionicons name="location-outline" size={14} color="#aaa" />
-          <Text style={styles.address} numberOfLines={1} ellipsizeMode="tail">
             {hotel.location.address}, {hotel.location.city}
           </Text>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.price}>
-            <Text style={styles.priceValue}>
-              {formatPrice(hotel.price, hotel.currency)}
-            </Text>
-            <Text style={styles.priceSuffix}> /night</Text>
+        <View style={styles.priceRow}>
+          <Text style={[styles.priceValue, { color: colors.primary }]}>
+            {formatPrice(hotel.price, hotel.currency)}
+          </Text>
+          <Text style={[styles.priceSuffix, { color: colors.text }]}>
+            /night
           </Text>
         </View>
       </View>
@@ -96,76 +115,64 @@ export function HotelCard({ hotel, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-    borderRadius: 20,
+    width: wp('90%'),
+    alignSelf: 'center',
+    borderRadius: wp('4%'),
     overflow: 'hidden',
-    elevation: 3,
+    borderWidth: 1,
+    marginBottom: hp('2%'),
+    elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  imageContainer: {
-    width: '100%',
-    height: 180,
+    shadowRadius: wp('1%'),
+    shadowOffset: { width: 0, height: hp('0.2%') },
   },
   image: {
     width: '100%',
-    height: '100%',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    backgroundColor: '#eee',
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: hp('20%'),
   },
   content: {
-    padding: 14,
-  },
-  header: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('2%'),
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    flexShrink: 1,
-    marginRight: 8,
+    fontSize: hp('2.5%'),
+    fontWeight: '700',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: hp('0.5%'),
   },
   stars: {
     flexDirection: 'row',
-    marginTop: 4,
   },
-  addressRow: {
+  userRating: {
+    marginLeft: wp('2%'),
+    fontSize: hp('2%'),
+    fontWeight: '600',
+  },
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: hp('1%'),
   },
   address: {
-    marginLeft: 4,
-    fontSize: 13,
-    color: '#888',
-    flex: 1,
+    marginLeft: wp('1%'),
+    fontSize: hp('1.8%'),
+    flexShrink: 1,
   },
-  footer: {
+  priceRow: {
     flexDirection: 'row',
+    marginTop: hp('1.5%'),
     alignItems: 'center',
-    marginTop: 14,
-    justifyContent: 'space-between',
-  },
-  price: {
-    fontSize: 14,
-    color: '#666',
   },
   priceValue: {
-    fontSize: 16,
+    fontSize: hp('2.2%'),
     fontWeight: 'bold',
-    color: '#E53935',
   },
   priceSuffix: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: hp('1.8%'),
+    marginLeft: wp('1%'),
   },
 });

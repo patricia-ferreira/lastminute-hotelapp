@@ -27,11 +27,7 @@ export interface Hotel {
   distanceToCenter: number;
 }
 
-export type SortOption =
-  | 'priceAsc' | 'priceDesc'
-  | 'ratingAsc' | 'ratingDesc'
-  | 'starsAsc' | 'starsDesc'
-  | 'distanceAsc' | 'distanceDesc';
+export type SortOption = 'priceAsc' | 'ratingDesc' | 'distanceAsc';
 
 export interface HotelFilters {
   query: string;

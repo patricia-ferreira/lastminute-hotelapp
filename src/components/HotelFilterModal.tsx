@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,17 +7,32 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Slider from '@react-native-community/slider';
 import { useTheme } from '@react-navigation/native';
-import PriceHistogram from './PriceHistogram';
-import { HotelFilters } from '../types/Hotel';
+import { HotelFilters, SortOption } from '../types/Hotel';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+import { formatPrice } from '../utils/formatPrice';
+
+const SORT_OPTIONS: { label: string; value: SortOption }[] = [
+  { label: 'Lowest Price', value: 'priceAsc' },
+  { label: 'Highest Rating', value: 'ratingDesc' },
+  { label: 'Closest to center', value: 'distanceAsc' },
+];
+
+const STAR_OPTIONS = [5, 4, 3, 2, 1];
+const RATING_OPTIONS = [9, 8, 7, 6];
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   prices: number[];
+  currency: string;
   filters: HotelFilters;
   setFilters: (filters: HotelFilters) => void;
 };
@@ -26,24 +41,42 @@ export default function HotelFiltersModal({
   visible,
   onClose,
   prices,
+  currency,
   filters,
   setFilters,
 }: Props) {
   const { colors } = useTheme();
-
   const [localFilters, setLocalFilters] = useState<HotelFilters>(filters);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    sortBy: false,
+    price: false,
+    stars: false,
+    ratings: false,
+    distance: false,
+  });
 
   useEffect(() => {
-    if (visible) {
-      setLocalFilters(filters);
-    }
+    if (visible) setLocalFilters(filters);
   }, [visible]);
+
+  const averagePrice =
+    prices.length > 0
+      ? Math.round(prices.reduce((sum, p) => sum + p, 0) / prices.length)
+      : null;
+
+  const averagePriceFormatted =
+    averagePrice !== null ? formatPrice(averagePrice, currency) : null;
 
   const toggle = (arr: number[], val: number, key: keyof HotelFilters) => {
     const updated = arr.includes(val)
       ? arr.filter(x => x !== val)
       : [...arr, val];
     setLocalFilters({ ...localFilters, [key]: updated });
+  };
+
+  const applyFilters = () => {
+    setFilters(localFilters);
+    onClose();
   };
 
   const resetFilters = () => {
@@ -58,10 +91,24 @@ export default function HotelFiltersModal({
     onClose();
   };
 
-  const applyFilters = () => {
-    setFilters(localFilters);
-    onClose();
+  const toggleExpand = (key: string) => {
+    setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const renderSectionHeader = (title: string, key: string) => (
+    <TouchableOpacity
+      onPress={() => toggleExpand(key)}
+      style={styles.sectionHeader}
+      activeOpacity={0.8}
+    >
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+      <Ionicons
+        name={expanded[key] ? 'chevron-up' : 'chevron-down'}
+        size={wp(5)}
+        color={colors.text}
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <Modal
@@ -77,151 +124,177 @@ export default function HotelFiltersModal({
       >
         <View style={[styles.modal, { backgroundColor: colors.card }]}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={colors.text} />
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={wp(6)} color={colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.title, { color: colors.text }]}>Filters</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Filter & Sort
+            </Text>
             <TouchableOpacity
               onPress={resetFilters}
-              style={[styles.resetButton, { borderColor: colors.primary }]}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text style={{ color: colors.primary }}>Reset</Text>
+              <Text style={{ color: colors.primary, fontWeight: '500' }}>
+                Clear all
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Price per night
-            </Text>
-            <PriceHistogram prices={prices} />
-            <View style={styles.priceInputs}>
-              <TextInput
-                placeholder="Min"
-                placeholderTextColor={colors.text + '66'}
-                style={[
-                  styles.input,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
-                keyboardType="numeric"
-                value={localFilters.minPrice?.toString() ?? ''}
-                onChangeText={text =>
-                  setLocalFilters({
-                    ...localFilters,
-                    minPrice: parseInt(text) || null,
-                  })
-                }
-              />
-              <TextInput
-                placeholder="Max"
-                placeholderTextColor={colors.text + '66'}
-                style={[
-                  styles.input,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
-                keyboardType="numeric"
-                value={localFilters.maxPrice?.toString() ?? ''}
-                onChangeText={text =>
-                  setLocalFilters({
-                    ...localFilters,
-                    maxPrice: parseInt(text) || null,
-                  })
-                }
-              />
-            </View>
-
-            <Text style={[styles.label, { color: colors.text }]}>Stars</Text>
-            <View style={styles.checkboxRow}>
-              {[5, 4, 3, 2, 1].map(n => (
-                <TouchableOpacity
-                  key={n}
-                  onPress={() => toggle(localFilters.stars, n, 'stars')}
-                  style={[
-                    styles.checkbox,
-                    { borderColor: colors.primary },
-                    localFilters.stars.includes(n) && {
-                      backgroundColor: colors.primary,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      color: localFilters.stars.includes(n)
-                        ? '#fff'
-                        : colors.text,
-                    }}
+          <ScrollView contentContainerStyle={{ paddingBottom: hp(3) }}>
+            {renderSectionHeader('Sort by', 'sortBy')}
+            {expanded.sortBy && (
+              <View style={styles.optionColumn}>
+                {SORT_OPTIONS.map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={styles.optionRow}
+                    onPress={() =>
+                      setLocalFilters({ ...localFilters, sortBy: opt.value })
+                    }
                   >
-                    {n}★
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <Ionicons
+                      name={
+                        localFilters.sortBy === opt.value
+                          ? 'radio-button-on'
+                          : 'radio-button-off'
+                      }
+                      size={wp(5)}
+                      color={colors.primary}
+                      style={{ marginRight: wp(3) }}
+                    />
+                    <Text style={{ color: colors.text }}>{opt.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
-            <Text style={[styles.label, { color: colors.text }]}>
-              User rating
-            </Text>
-            <View style={styles.checkboxRow}>
-              {[9, 8, 7, 6].map(n => (
-                <TouchableOpacity
-                  key={n}
-                  onPress={() =>
-                    toggle(localFilters.userRatings, n, 'userRatings')
+            {renderSectionHeader('Price per night', 'price')}
+            {expanded.price && (
+              <View>
+                {averagePriceFormatted !== null && (
+                  <Text style={[styles.avgPriceText, { color: colors.text }]}>
+                    The average price in this location is{' '}
+                    {averagePriceFormatted}
+                  </Text>
+                )}
+                <View style={styles.priceInputs}>
+                  <TextInput
+                    placeholder="Min"
+                    placeholderTextColor={colors.text + '66'}
+                    style={[
+                      styles.input,
+                      { color: colors.text, borderColor: colors.border },
+                    ]}
+                    keyboardType="numeric"
+                    value={localFilters.minPrice?.toString() ?? ''}
+                    onChangeText={text =>
+                      setLocalFilters({
+                        ...localFilters,
+                        minPrice: parseInt(text) || null,
+                      })
+                    }
+                  />
+                  <TextInput
+                    placeholder="Max"
+                    placeholderTextColor={colors.text + '66'}
+                    style={[
+                      styles.input,
+                      { color: colors.text, borderColor: colors.border },
+                    ]}
+                    keyboardType="numeric"
+                    value={localFilters.maxPrice?.toString() ?? ''}
+                    onChangeText={text =>
+                      setLocalFilters({
+                        ...localFilters,
+                        maxPrice: parseInt(text) || null,
+                      })
+                    }
+                  />
+                </View>
+              </View>
+            )}
+
+            {renderSectionHeader('Stars', 'stars')}
+            {expanded.stars && (
+              <View style={styles.optionColumn}>
+                {STAR_OPTIONS.map(n => (
+                  <TouchableOpacity
+                    key={n}
+                    style={styles.optionRow}
+                    onPress={() => toggle(localFilters.stars, n, 'stars')}
+                  >
+                    <Ionicons
+                      name={
+                        localFilters.stars.includes(n)
+                          ? 'checkbox'
+                          : 'square-outline'
+                      }
+                      size={wp(5)}
+                      color={colors.primary}
+                      style={{ marginRight: wp(3) }}
+                    />
+                    <Text style={{ color: colors.text }}>{n} star</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {renderSectionHeader('User rating', 'ratings')}
+            {expanded.ratings && (
+              <View style={styles.optionColumn}>
+                {RATING_OPTIONS.map(n => (
+                  <TouchableOpacity
+                    key={n}
+                    style={styles.optionRow}
+                    onPress={() =>
+                      toggle(localFilters.userRatings, n, 'userRatings')
+                    }
+                  >
+                    <Ionicons
+                      name={
+                        localFilters.userRatings.includes(n)
+                          ? 'checkbox'
+                          : 'square-outline'
+                      }
+                      size={wp(5)}
+                      color={colors.primary}
+                      style={{ marginRight: wp(3) }}
+                    />
+                    <Text style={{ color: colors.text }}>{n}+</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            {renderSectionHeader('Distance to center (km)', 'distance')}
+            {expanded.distance && (
+              <View>
+                <Slider
+                  minimumValue={0}
+                  maximumValue={30}
+                  step={1}
+                  value={localFilters.maxDistance ?? 0}
+                  onValueChange={v =>
+                    setLocalFilters({ ...localFilters, maxDistance: v })
                   }
-                  style={[
-                    styles.checkbox,
-                    { borderColor: colors.primary },
-                    localFilters.userRatings.includes(n) && {
-                      backgroundColor: colors.primary,
-                    },
-                  ]}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={colors.border}
+                  thumbTintColor={colors.primary}
+                />
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: hp(1),
+                    color: colors.text,
+                    fontSize: wp(4),
+                  }}
                 >
-                  <Text
-                    style={{
-                      color: localFilters.userRatings.includes(n)
-                        ? '#fff'
-                        : colors.text,
-                    }}
-                  >
-                    {n}+
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={[styles.label, { color: colors.text }]}>
-              Distance to center (km)
-            </Text>
-            <Slider
-              minimumValue={0}
-              maximumValue={30}
-              step={1}
-              value={localFilters.maxDistance ?? 0}
-              onValueChange={v =>
-                setLocalFilters({ ...localFilters, maxDistance: v })
-              }
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.border,
-                  marginTop: 8,
-                },
-              ]}
-              keyboardType="numeric"
-              placeholder="e.g. 5"
-              placeholderTextColor={colors.text + '66'}
-              value={localFilters.maxDistance?.toString() ?? ''}
-              onChangeText={t =>
-                setLocalFilters({
-                  ...localFilters,
-                  maxDistance: parseInt(t) || null,
-                })
-              }
-            />
+                  {localFilters.maxDistance ?? 0} km
+                </Text>
+              </View>
+            )}
           </ScrollView>
 
           <TouchableOpacity
@@ -230,9 +303,10 @@ export default function HotelFiltersModal({
           >
             <Text
               style={{
-                color: colors.text,
+                color: '#fff',
                 textAlign: 'center',
                 fontWeight: '600',
+                fontSize: wp(4),
               }}
             >
               Apply filters
@@ -251,57 +325,61 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   modal: {
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
+    padding: wp(5),
+    borderTopLeftRadius: wp(5),
+    borderTopRightRadius: wp(5),
+    height: '90%',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: hp(2),
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: wp(5),
+    fontWeight: '700',
   },
-  resetButton: {
-    padding: 8,
-    borderWidth: 1,
-    borderRadius: 8,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: hp(1.5),
   },
-  label: {
-    fontSize: 14,
+  sectionTitle: {
+    fontSize: wp(4.5),
     fontWeight: '600',
-    marginBottom: 6,
+  },
+  optionColumn: {
+    paddingLeft: wp(2),
+    marginBottom: hp(1.5),
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: hp(0.7),
   },
   priceInputs: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: wp(3),
+    marginBottom: hp(2),
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    fontSize: 14,
+    borderRadius: wp(2),
+    padding: hp(1.2),
+    fontSize: wp(4),
   },
-  checkboxRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 16,
-  },
-  checkbox: {
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+  avgPriceText: {
+    fontSize: wp(3.5),
+    marginBottom: hp(0.8),
+    fontStyle: 'italic',
   },
   applyButton: {
-    padding: 12,
-    borderRadius: 8,
+    padding: hp(2),
+    borderRadius: wp(3),
+    marginTop: hp(1),
+    marginBottom: Platform.OS === 'ios' ? hp(3) : 0,
   },
 });

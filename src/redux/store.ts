@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import hotelsReducer from './slices/hotelSlice'; 
+import hotelsReducer from './slices/hotelSlice';
 
 export const store = configureStore({
   reducer: {

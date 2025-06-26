@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import { NavigationContainer } from '@react-navigation/native';
 import { useColorScheme } from 'react-native';
-import MainNavigator from './src/navigation/index';
+import AppNavigator from './src/navigation/index';
 import { DarkTheme, LightTheme } from './src/theme/theme';
 
 export default function App() {
@@ -12,7 +12,7 @@ export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer theme={isDark ? DarkTheme : LightTheme}>
-        <MainNavigator />
+        <AppNavigator />
       </NavigationContainer>
     </Provider>
   );

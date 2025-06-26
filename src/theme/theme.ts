@@ -6,10 +6,10 @@ export const LightTheme = {
     colors: {
         primary: '#FF477E',
         background: '#FFFFFF',
-        card: '#F6F6F6',
+        card: '#FAFAFA',
         text: '#1E2A38',
-        border: '#E2E2E2',
-        notification: 'gray',
+        border: '#CCCCCC',
+        notification: '#FFA726',
     }
 };
 
@@ -19,9 +19,9 @@ export const DarkTheme = {
     colors: {
         primary: '#FF477E',
         background: '#121212',
-        card: '#1E1E1E',
+        card: '#1F1F1F',
         text: '#EAF0F6',
-        border: '#3A3A3A',
-        notification: 'gray',
+        border: '#444444',
+        notification: '#FFB74D',
     }
 };

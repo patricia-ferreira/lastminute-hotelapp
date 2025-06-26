@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Hotel } from '../../types/Hotel';
-import { haversineDistance, validateGallery, cityCenters } from '../../utils/hotelUtils';
+import { haversineDistance, validateGallery } from '../../utils/hotelUtils';
+import { cities } from '../../mocks/cities';
+import Config from 'react-native-config';
 
 export enum Status {
   Idle = 'idle',
@@ -21,9 +23,6 @@ const initialState: HotelsState = {
   error: null,
 };
 
-// API URL extracted for easier maintenance
-const HOTELS_API_URL = 'https://technology.lastminute.com/api/hotel.json';
-
 // Async thunk to fetch hotels with controlled error handling
 export const fetchHotels = createAsyncThunk<
   Hotel[],
@@ -33,24 +32,30 @@ export const fetchHotels = createAsyncThunk<
   'hotels/fetchHotels',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(HOTELS_API_URL);
+
+      if (!Config.API_BASE_URL) {
+        throw new Error('Missing API_BASE_URL in environment configuration.');
+      }
+
+      const response = await fetch(`${Config.API_BASE_URL}/hotel.json`);
+
       if (!response.ok) {
-         // Return a custom error message when response is not OK
+        // Return a custom error message when response is not OK
         return rejectWithValue('Failed to load hotels (invalid response).');
       }
-      
+
       const rawHotels = (await response.json()) as Hotel[];
 
       const enhancedHotels: Hotel[] = await Promise.all(
         rawHotels.map(async (hotel) => {
-          const center = cityCenters[hotel.location.city];
-          const distance = center
+          const city = cities.find(c => c.name === hotel.location.city);
+          const distance = city
             ? haversineDistance(
-                hotel.location.latitude,
-                hotel.location.longitude,
-                center.latitude,
-                center.longitude
-              )
+              hotel.location.latitude,
+              hotel.location.longitude,
+              city.center.latitude,
+              city.center.longitude
+            )
             : 0;
 
           const cleanedGallery = await validateGallery(hotel.gallery);
