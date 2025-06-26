@@ -1,13 +1,11 @@
-/**
- * @format
- */
-
 import React from 'react';
-import ReactTestRenderer from 'react-test-renderer';
+import { render, waitFor } from '@testing-library/react-native';
 import App from '../App';
 
-test('renders correctly', async () => {
-  await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<App />);
+test('renders without crashing', async () => {
+  const screen = render(<App />);
+
+  await waitFor(() => {
+    expect(screen).toBeTruthy();
   });
 });

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Hotel } from '../../types/Hotel';
-import { haversineDistance } from '../../utils/hotelUtils';
+import { haversineDistance } from '../../utils/haversineDistance';
 import { cities } from '../../mocks/cities';
 import Config from 'react-native-config';
 

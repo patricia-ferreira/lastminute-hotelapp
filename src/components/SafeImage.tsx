@@ -22,6 +22,7 @@ const SafeImage = ({ source, style, resizeMode = 'contain' }: Props) => {
 
   return hasError ? (
     <View
+      testID="safe-image-fallback"
       style={[
         style,
         {
@@ -34,13 +35,13 @@ const SafeImage = ({ source, style, resizeMode = 'contain' }: Props) => {
       <Ionicons name="business-outline" size={hp('5%')} color="#999" />
     </View>
   ) : (
-      <Image
-        source={{ uri: source }}
-        style={style}
-        resizeMode={resizeMode}
-        onError={handleError}
-      />
-
+    <Image
+      testID="safe-image"
+      source={{ uri: source }}
+      style={style}
+      resizeMode={resizeMode}
+      onError={handleError}
+    />
   );
 };
 

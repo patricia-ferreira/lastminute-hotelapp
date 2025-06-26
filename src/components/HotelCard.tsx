@@ -36,6 +36,7 @@ export function HotelCard({ hotel, onPress }: Props) {
 
   return (
     <TouchableOpacity
+      testID="hotel-card-touchable"
       style={[
         styles.card,
         { backgroundColor: colors.card, borderColor: colors.border },
@@ -43,12 +44,16 @@ export function HotelCard({ hotel, onPress }: Props) {
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <SafeImage source={hotel.gallery[0]} style={styles.image} />
+      <SafeImage
+        source={hotel.gallery[0]}
+        style={styles.image}
+        resizeMode={'cover'}
+      />
 
       <View style={styles.content}>
         <Text
           style={[styles.title, { color: colors.text }]}
-          numberOfLines={1}
+          numberOfLines={2}
           ellipsizeMode="tail"
           adjustsFontSizeToFit
         >
@@ -57,13 +62,8 @@ export function HotelCard({ hotel, onPress }: Props) {
 
         <View style={styles.ratingRow}>
           <View style={styles.stars}>{renderStars()}</View>
-          <Text
-            style={[
-              styles.userRating,
-              { color: colors.text, marginLeft: wp('2%') },
-            ]}
-          >
-            | {hotel.userRating.toFixed(1)} (based on user reviews)
+          <Text style={[styles.userRating, { color: colors.text }]}>
+            | {hotel.userRating.toFixed(1)}
           </Text>
         </View>
 
@@ -72,11 +72,13 @@ export function HotelCard({ hotel, onPress }: Props) {
             name="location-outline"
             size={hp('2%')}
             color={colors.text}
+            style={styles.locationIcon}
           />
           <Text
             style={[styles.address, { color: colors.text }]}
-            numberOfLines={1}
+            numberOfLines={2}
             ellipsizeMode="tail"
+            adjustsFontSizeToFit
           >
             {hotel.location.address}, {hotel.location.city}
           </Text>
@@ -97,64 +99,66 @@ export function HotelCard({ hotel, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
+    height: hp('20%'),
     width: wp('90%'),
     alignSelf: 'center',
     borderRadius: wp('4%'),
     overflow: 'hidden',
     borderWidth: 1,
     marginBottom: hp('2.5%'),
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('1%'),
-    shadowOffset: { width: 0, height: hp('0.2%') },
+    backgroundColor: '#fff',
   },
   image: {
-    width: '100%',
-    height: hp('20%'),
+    width: '40%',
+    height: '100%',
   },
   content: {
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('2%'),
+    flex: 1,
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('1.5%'),
+    justifyContent: 'space-evenly',
   },
   title: {
-    fontSize: hp('2.5%'),
+    fontSize: hp('2.2%'),
     fontWeight: '700',
+    flexShrink: 1,
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('0.5%'),
   },
   stars: {
     flexDirection: 'row',
   },
   userRating: {
     marginLeft: wp('2%'),
-    fontSize: hp('2%'),
-    fontWeight: '600',
+    fontSize: hp('1.8%'),
+    fontWeight: '500',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp('1%'),
+  },
+  locationIcon: {
+    marginTop: hp('0.2%'),
   },
   address: {
     marginLeft: wp('1%'),
-    fontSize: hp('1.8%'),
+    fontSize: hp('1.6%'),
     flexShrink: 1,
+    flex: 1,
   },
   priceRow: {
     flexDirection: 'row',
-    marginTop: hp('1.5%'),
     alignItems: 'center',
   },
   priceValue: {
-    fontSize: hp('2.2%'),
+    fontSize: hp('2%'),
     fontWeight: 'bold',
   },
   priceSuffix: {
-    fontSize: hp('1.8%'),
+    fontSize: hp('1.6%'),
     marginLeft: wp('1%'),
   },
 });
